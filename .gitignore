@@ -1,0 +1,513 @@
+/*Create a Minesweeper program!!*/
+
+#include<stdio.h>
+#include<conio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<dos.h>
+#include<ctype.h>
+#include<math.h>
+
+
+/*GRAPHICS --- TITLE SCREENS*/
+void title_screen(void);
+void title_screen2(void);
+
+/*LOGIC --- USER INPUT*/
+void grid_preferences(int *maxrow, int *maxcol);
+
+/*LOGIC --- MINES*/
+void max_mines(int *maxrow, int *maxcol, int *maxmines);
+void set_mines(int *maxrow, int *maxcol, int *maxmines, int arr[100][100]);
+void mine_plusOne(int *maxrow, int *maxcol, int arr[100][100]);
+
+/*GRAPHICS --- REVEALED GRID*/
+void display_grid(int *maxrow, int *maxcol, int arr[100][100]);
+
+/*GRAPHICS --- HIDDEN GRID*/
+void hide_grid(int *maxrow, int *maxcol);
+void pickXY(int flag[15][15], int arr[100][100], int *maxrow, int *maxcol, int *maxmines);
+
+/*OTHERS*/
+int charToInt(char c[]);
+
+int main(void)
+{
+char YoN;
+do{
+	int maxrow, maxcol, maxmines;
+	int arr[100][100] = {0};
+	int flag[15][15] = {0};
+
+	clrscr();
+	randomize();
+
+	maxmines = 0;
+
+	//title_screen();
+	clrscr();
+	grid_preferences(&maxrow, &maxcol);
+
+	max_mines(&maxrow, &maxcol, &maxmines);
+	set_mines(&maxrow, &maxcol, &maxmines, arr);
+	mine_plusOne(&maxrow, &maxcol, arr);
+
+	display_grid(&maxrow, &maxcol, arr);
+	hide_grid(&maxrow, &maxcol);
+
+	pickXY(flag, arr, &maxrow, &maxcol, &maxmines);
+
+	do{
+		gotoxy(15, 45);
+		printf("Do you want another game? (Y/N) >> ");
+		scanf("%c", &YoN);
+	}while(YoN != 'Y' && YoN != 'y' && YoN != 'N' && YoN != 'n');
+
+}while(YoN == 'Y' || YoN == 'y');
+	return 0;
+}
+
+
+void title_screen(void)
+{
+	/*loop for making borders; fill the first column*/
+	int x;
+	char ch[100];
+
+	for(x = 1; x <= 40; x++)
+	{
+		if(x%2 == 0)
+		{
+			textcolor(11);
+			cprintf("\xdb\xdb");
+			delay(50);
+		}
+		else if(x%2 != 0)
+		{
+			textcolor(12);
+			cprintf("\xb1\xb1");
+			delay(50);
+		}
+	}
+
+	/*reverse coordinates*/
+	for(x = 40; x >= 1; x--)
+	{
+		if(x%2 == 0)
+		{
+			gotoxy(x*2 - 1, 2);
+			textcolor(12);
+			cprintf("\xb1\xb1");
+			delay(50);
+		}
+		else if(x%2 != 0)
+		{
+			gotoxy(x*2 - 1, 2);
+			textcolor(11);
+			cprintf("\xdb\xdb");
+			delay(50);
+		}
+	}
+
+	/**********************************************/
+	gotoxy(24, 3);
+	strcpy(ch, "MINESWEEPER --- A C-BASED PROGRAM");
+	for(x=0; x<33; x++)
+	{
+		textcolor(15);
+		cprintf("%c", ch[x]);
+		delay(100);
+	}
+	/**********************************************/
+
+	gotoxy(1, 4);
+	for(x = 40; x >= 1; x--)
+	{
+		if(x%2 != 0)
+		{
+			gotoxy(x*2 - 1, 4);
+			textcolor(11);
+			cprintf("\xdb\xdb");
+			delay(50);
+		}
+		else if(x%2 == 0)
+		{
+			gotoxy(x*2 - 1, 4);
+			textcolor(12);
+			cprintf("\xb1\xb1");
+			delay(50);
+		}
+	}
+	printf("\n");
+
+	/*reverse coordinates*/
+	for(x = 1; x <= 40; x++)
+	{
+		if(x%2 != 0)
+		{
+			textcolor(12);
+			cprintf("\xb1\xb1");
+			delay(50);
+		}
+		else if(x%2 == 0)
+		{
+			textcolor(11);
+			cprintf("\xdb\xdb");
+			delay(50);
+		}
+	}
+}
+
+
+void title_screen2(void)
+{
+	/*loop for making borders; fill the first column*/
+	int x;
+	char ch[100];
+
+	for(x = 1; x <= 40; x++)
+	{
+		if(x%2 == 0)
+		{
+			textcolor(11);
+			cprintf("\xdb\xdb");
+		}
+		else if(x%2 != 0)
+		{
+			textcolor(12);
+			cprintf("\xb1\xb1");
+		}
+	}
+
+	/*reverse coordinates*/
+	for(x = 40; x >= 1; x--)
+	{
+		if(x%2 == 0)
+		{
+			gotoxy(x*2 - 1, 2);
+			textcolor(12);
+			cprintf("\xb1\xb1");
+		}
+		else if(x%2 != 0)
+		{
+			gotoxy(x*2 - 1, 2);
+			textcolor(11);
+			cprintf("\xdb\xdb");
+		}
+	}
+
+	/**********************************************/
+	gotoxy(24, 3);
+	strcpy(ch, "MINESWEEPER --- A C-BASED PROGRAM");
+	for(x=0; x<33; x++)
+	{
+		textcolor(15);
+		cprintf("%c", ch[x]);
+	}
+	/**********************************************/
+
+	gotoxy(1, 4);
+	for(x = 40; x >= 1; x--)
+	{
+		if(x%2 != 0)
+		{
+			gotoxy(x*2 - 1, 4);
+			textcolor(11);
+			cprintf("\xdb\xdb");
+		}
+		else if(x%2 == 0)
+		{
+			gotoxy(x*2 - 1, 4);
+			textcolor(12);
+			cprintf("\xb1\xb1");
+		}
+	}
+	printf("\n");
+
+	/*reverse coordinates*/
+	for(x = 1; x <= 40; x++)
+	{
+		if(x%2 != 0)
+		{
+			textcolor(12);
+			cprintf("\xb1\xb1");
+		}
+		else if(x%2 == 0)
+		{
+			textcolor(11);
+			cprintf("\xdb\xdb");
+		}
+	}
+}
+
+
+void grid_preferences(int *maxrow, int *maxcol)
+{
+	int tempR, tempC;
+	char ch1[50], ch2[50];
+
+	printf("\n\20 ROWS AND COLUMNS SHOULD BE NOT LESS THAN 4 AND NOT MORE THAN 9!!");
+
+	do{
+	do{
+		clrscr();
+		title_screen2();
+		textcolor(14);
+		cprintf("\n\n\20 Enter your preferred number of rows (from \'3\' to \'9\'): ");
+		gets(ch1);
+		tempR = charToInt(ch1);
+
+		textcolor(14);
+		cprintf("\n\20 Enter your preferred number of columns (from \'3\' to \'9\'): ");
+		gets(ch2);
+		tempC = charToInt(ch2);
+	}while(tempR > 9 || tempR < 3);
+	}while(tempC > 9 || tempC < 3);
+
+	*maxrow = tempR;
+	*maxcol = tempC;
+}
+
+int charToInt(char c[])
+{
+	int holder;
+
+	if(strcmp(c, "1") == 0)
+	{
+		holder = 1;
+	}
+	else if(strcmp(c, "2") == 0)
+	{
+		holder = 2;
+	}
+	else if(strcmp(c, "3") == 0)
+	{
+		holder = 3;
+	}
+	else if(strcmp(c, "4") == 0)
+	{
+		holder = 4;
+	}
+	else if(strcmp(c, "5") == 0)
+	{
+		holder = 5;
+	}
+	else if(strcmp(c, "6") == 0)
+	{
+		holder = 6;
+	}
+	else if(strcmp(c, "7") == 0)
+	{
+		holder = 7;
+	}
+	else if(strcmp(c, "8") == 0)
+	{
+		holder = 8;
+	}
+	else if(strcmp(c, "9") == 0)
+	{
+		holder = 9;
+	}
+	else{
+		holder = 1000;
+	}
+
+	return holder;
+}
+
+
+void max_mines(int *maxrow, int *maxcol, int *maxmines){
+	*maxmines = ((*maxrow * *maxcol)/4) + 1;
+}
+
+void set_mines(int *maxrow, int *maxcol, int *maxmines, int arr[100][100])
+{
+	int minectr, r, c;
+	r=0;
+	c=0;
+	for(minectr=1; minectr <= *maxmines;)
+	{
+		r = rand()%*maxrow;
+		c = rand()%*maxcol;
+
+		if(arr[r][c] == 0)
+		{
+			arr[r][c] = 9;
+			minectr++;
+		}
+	}
+
+}
+
+void mine_plusOne(int *maxrow, int *maxcol, int arr[100][100])
+{
+	int r, c;
+
+	for(r = 0; r < *maxrow; r++)
+	{
+		for(c = 0; c < *maxcol; c++)
+		{
+			if(arr[r][c] == 9)
+			{
+				if(arr[r-1][c] != 9 && r >= 0)
+				{
+					arr[r-1][c]++;
+				}
+
+				if(arr[r-1][c+1] != 9 && c < *maxcol && r >= 0)
+				{
+					arr[r-1][c+1]++;
+				}
+
+				if(arr[r][c+1] != 9 && c < *maxcol)
+				{
+					arr[r][c+1]++;
+				}
+
+				if(arr[r+1][c+1] != 9 && r < *maxrow && c < *maxcol)
+				{
+					arr[r+1][c+1]++;
+				}
+
+				if(arr[r+1][c] != 9 && r < *maxrow)
+				{
+					arr[r+1][c]++;
+				}
+
+				if(arr[r+1][c-1] != 9 && r < *maxrow && c >= 0)
+				{
+					arr[r+1][c-1]++;
+				}
+
+				if(arr[r][c-1] != 9 && c >= 0)
+				{
+					arr[r][c-1]++;
+				}
+
+				if(arr[r-1][c-1] != 9 && r >= 0 && c >= 0)
+				{
+					arr[r-1][c-1]++;
+				}
+			}
+		}
+	}
+}
+
+
+void display_grid(int *maxrow, int *maxcol, int arr[100][100])
+{
+	int r, c, o;
+
+	/*Set all the necessary values to each cell.*/
+	for(r = 0; r < *maxrow; r++)
+	{
+		for(c = 0; c < *maxcol; c++)
+		{
+			gotoxy((c+1)*4+6, (r+1)*2+16);
+
+			if(arr[r][c] != 9)
+			{
+				textcolor(2); cprintf("%d", arr[r][c]);
+			}
+
+			else if(arr[r][c] == 9)
+			{
+				textcolor(4); cprintf("\17");
+			}
+		}
+	}
+
+	/*Print the grid indicator.*/
+
+	/*For Horizontal*/
+	for(o = 0; o < *maxcol; o++)
+	{
+		gotoxy((o+1)*4+5, 15);
+		textcolor(5); cprintf("[%d]", o+1);
+	}
+
+	/*For Vertical --- Re-initialize the 'o' variable.*/
+	for(o = 0; o < *maxrow; o++)
+	{
+		gotoxy(4, (o+1)*2+16);
+		textcolor(5); cprintf("[%d]", o+1);
+	}
+
+}
+
+void hide_grid(int *maxrow, int *maxcol)
+{
+	int r, c;
+
+	for(r = 0; r < *maxrow; r++)
+	{
+		for(c = 0; c < *maxcol; c++)
+		{
+			gotoxy((c+1)*4+6, (r+1)*2+16);
+			textcolor(6); cprintf("\xdb");
+		}
+	}
+}
+
+
+void pickXY(int flag[15][15], int arr[100][100], int *maxrow, int *maxcol, int *maxmines)
+{
+	int ro, co, check = 0;
+	char ch1[50], ch2[50];
+
+	do{
+		do
+		{
+			do
+			{
+				gotoxy(46, 36);
+				printf("Select row number: ");
+				gotoxy(65, 36); printf("          ");
+				gotoxy(65, 36); gets(ch1);
+				ro = charToInt(ch1);
+			}
+			while(ro > *maxrow || ro < 1);
+
+			do
+			{
+				gotoxy(46, 38);
+				printf("Select col number: ");
+				gotoxy(65, 38); printf("          ");
+				gotoxy(65, 38); gets(ch2);
+				co = charToInt(ch2);
+			}
+			while(co > *maxcol || co < 1);
+
+			if(flag[ro-1][co-1] == 0 && arr[ro-1][co-1] != 9)
+			{
+				flag[ro-1][co-1] = 1;
+				check = check + 1;
+				gotoxy((co)*4+6, (ro)*2+16);
+				textcolor(GREEN);
+				cprintf("%d", arr[ro-1][co-1]);
+			}
+
+			else if(flag[ro-1][co-1] == 0 && arr[ro-1][co-1] == 9)
+			{
+				flag[ro-1][co-1] = 1;
+				check = check + 1;
+				//gotoxy((co)*4+6, (ro)*2+16);
+				//printf("%d", arr[ro-1][co-1]);
+				display_grid(&*maxrow, &*maxcol, arr);
+				gotoxy(46, 40);
+				textcolor(WHITE + BLINK);
+				cprintf("YOU LOSE!! :D");
+				//getch();
+				return;
+			}
+		}
+		while(flag[ro][co] == 1);
+
+	}
+	while(check != (*maxrow * *maxcol) - *maxmines);
+	gotoxy(46, 40);
+	textcolor(WHITE + BLINK);
+	cprintf("YOU WIN!! :D");
+}
+
+
